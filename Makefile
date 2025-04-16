@@ -4,7 +4,7 @@ AR			= ar
 ARFLAGS		= rcs
 RM = rm -fv
 
-LIB_OBJS	= strings.o
+LIB_OBJS	= strings.o animations.o
 LIB_NAME	= libstrings.so
 
 APP_SRC = main.c

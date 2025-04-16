@@ -7,7 +7,8 @@ RM = rm -fv
 LIB_OBJS	= strings.o
 LIB_NAME	= libstrings.so
 
-BINARY		= library_test
+APP_SRC = main.c
+APP		= library_test
 
 %.o: %.c
 	${CC} ${CFLAGS} $< -o $@
@@ -15,11 +16,11 @@ BINARY		= library_test
 ${LIB_NAME}: ${LIB_OBJS}
 	${AR} ${ARFLAGS} $@ ${LIB_OBJS}
 
-${BINARY}: ${LIB_NAME}
-	${CC} main.c -L. -lstrings -o $@
+${APP}: ${LIB_NAME} ${APP_SRC}
+	${CC} ${APP_SRC} -L. -lstrings -o $@
 
-test: ${BINARY}
-	./${BINARY}
+test: ${APP}
+	./${APP}
 
 clean:
 	${RM} ${BINARY} ${LIB_NAME} ${LIB_OBJS}

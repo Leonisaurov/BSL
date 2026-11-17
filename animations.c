@@ -1,22 +1,18 @@
 #include "animations.h"
-// #include <stdio.h>
+
+#include <string.h>
 
 bool cyclic_shift(string_t string) {
-    if (string == NULL)
+    if (string == NULL || string->str == NULL)
         return false;
 
-    char *str = string->str;
-    char init = *str;
+    size_t len = string->len;
+    if (len <= 1)
+        return true;
 
-    size_t i = 0;
-    while(str[i] != '\0') {
-        // printf("%lu: %c->%c;str[%lu]=%c\n", i, str[i], str[i + 1], i, str[i + 1]);
-        str[i] = str[i + 1];
-        i++;
-    }
-    i--;
-    // printf("%lu: %c->%c;str[%lu]=%c\n", i, str[i], init, i, init);
-    str[i] = init;
+    char first = string->str[0];
+    memmove(string->str, string->str + 1, len - 1);
+    string->str[len - 1] = first;
 
     return true;
 }

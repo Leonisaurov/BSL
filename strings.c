@@ -1,20 +1,35 @@
 #include "strings.h"
+
+#include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
-#include <malloc.h>
 
-size_t utf8_string_len(const char* str) {
-    size_t size = 0;
-    if (str == NULL)
-        return -1;
+static string_t new_string(void);
 
-    while (str[size] != '\0') {
-        size++;
+/*
+ * Allocate a string with room for `capacity` bytes plus the terminating NUL.
+ * The initial contents are an empty string.
+ */
+static string_t allocate_string(size_t capacity) {
+    if (capacity == SIZE_MAX)
+        return NULL;
+
+    string_t string = new_string();
+    if (string == NULL)
+        return NULL;
+
+    string->str = (char*) malloc(capacity + 1);
+    if (string->str == NULL) {
+        free_string(string);
+        return NULL;
     }
 
-    return size;
+    string->str[0] = '\0';
+    string->size = capacity;
+    return string;
 }
 
-string_t new_string() {
+static string_t new_string(void) {
     string_t string = (string_t) malloc(sizeof(struct string));
     if (string == NULL)
         return NULL;
@@ -27,63 +42,60 @@ string_t new_string() {
 }
 
 string_t from_str(const char* str) {
-    string_t string = new_string();
+    if (str == NULL)
+        return NULL;
+
+    size_t str_len = strlen(str);
+
+    string_t string = allocate_string(str_len);
     if (string == NULL)
         return NULL;
 
-    size_t str_len = utf8_string_len(str);
-    string->size = str_len * 1.5;
-    string->str = (char*) malloc(sizeof(char) * (string->size + 1));
-    string->str[string->size] = '\0';
-    if (string->str == NULL) {
-        free_string(string);
-        return NULL;
-    }
-    memcpy(string->str, str, str_len);
+    if (str_len > 0)
+        memcpy(string->str, str, str_len);
+
+    string->str[str_len] = '\0';
     string->len = str_len;
-    string->str[string->len] = '\0';
 
     return string;
 }
 
-string_t repeat_char(char c, unsigned short r_times) {
-    string_t string = new_string();
+string_t repeat_char(char c, size_t r_times) {
+    string_t string = allocate_string(r_times);
     if (string == NULL)
         return NULL;
 
+    if (r_times > 0)
+        memset(string->str, c, r_times);
+
+    string->str[r_times] = '\0';
     string->len = r_times;
-    string->size = string->len * 1.5;
-    string->str = (char*) malloc(sizeof(char) * (string->size + 1));
-    if (string->str == NULL) {
-        free_string(string);
-        return NULL;
-    }
-
-    memset(string->str, c, string->len);
-    string->str[string->len] = '\0';
 
     return string;
 }
 
-string_t repeat_str(const char* str, unsigned short r_times) {
-    string_t string = new_string();
+string_t repeat_str(const char* str, size_t r_times) {
+    if (str == NULL)
+        return NULL;
+
+    size_t str_len = strlen(str);
+
+    if (r_times != 0 && str_len > SIZE_MAX / r_times)
+        return NULL;
+
+    size_t total_len = str_len * r_times;
+
+    string_t string = allocate_string(total_len);
     if (string == NULL)
         return NULL;
 
-    size_t str_len = utf8_string_len(str);
-    string->len = str_len * r_times;
-    string->size = string->len;
-    string->str = (char*) malloc(sizeof(char) * (string->size + 1));
-    if (string->str == NULL) {
-        free_string(string);
-        return NULL;
+    if (total_len > 0) {
+        for (size_t i = 0; i < r_times; i++)
+            memcpy(string->str + i * str_len, str, str_len);
     }
 
-    for (unsigned short i = 0; i < r_times; i++) {
-        memcpy(string->str + i * str_len, str, str_len);
-    }
-
-    string->str[string->len] = '\0';
+    string->str[total_len] = '\0';
+    string->len = total_len;
 
     return string;
 }
@@ -91,6 +103,7 @@ string_t repeat_str(const char* str, unsigned short r_times) {
 void free_string(string_t string) {
     if (string == NULL)
         return;
+
     if (string->str != NULL)
         free(string->str);
     free(string);

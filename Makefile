@@ -1,28 +1,30 @@
-CC			= gcc
-CFLAGS		= -fPIC -c
-AR			= ar
-ARFLAGS		= rcs
+CC ?= gcc
+CFLAGS ?= -O2 -Wall -Wextra -Wpedantic
+CPPFLAGS ?=
+LDFLAGS ?=
 RM = rm -fv
 
-LIB_OBJS	= strings.o animations.o
-LIB_NAME	= libstrings.so
+LIB_OBJS = strings.o animations.o
+LIB_NAME = libstrings.so
 
 APP_SRC = main.c
-APP		= library_test
+APP = library_test
+
+.PHONY: all test clean
+
+all: ${APP}
 
 %.o: %.c
-	${CC} ${CFLAGS} $< -o $@
+	${CC} ${CPPFLAGS} ${CFLAGS} -fPIC -c $< -o $@
 
 ${LIB_NAME}: ${LIB_OBJS}
-	${AR} ${ARFLAGS} $@ ${LIB_OBJS}
+	${CC} -shared -o $@ ${LIB_OBJS} ${LDFLAGS}
 
 ${APP}: ${LIB_NAME} ${APP_SRC}
-	${CC} ${APP_SRC} -L. -lstrings -o $@
+	${CC} ${CPPFLAGS} ${CFLAGS} ${APP_SRC} -L. -lstrings -Wl,-rpath,'$$ORIGIN' ${LDFLAGS} -o $@
 
 test: ${APP}
 	./${APP}
 
 clean:
-	${RM} ${BINARY} ${LIB_NAME} ${LIB_OBJS}
-
-.PHONY: test clean
+	${RM} ${APP} ${LIB_NAME} ${LIB_OBJS}
